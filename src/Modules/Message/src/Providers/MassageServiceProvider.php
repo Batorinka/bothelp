@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace BotHelp\WebApi\Modules\Message\Providers;
 
-use BotHelp\WebApi\Modules\Message\Console\Commands\GenerateEvents;
+use BotHelp\WebApi\Modules\Message\Console\Commands\ConsumeMessages;
+use BotHelp\WebApi\Modules\Message\Console\Commands\GenerateMessages;
 use Illuminate\Support\ServiceProvider;
 
 class MassageServiceProvider extends ServiceProvider
@@ -19,6 +20,12 @@ class MassageServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->register(MessageDIServiceProvider::class);
+        $this->commands(
+            [
+                GenerateMessages::class,
+                ConsumeMessages::class,
+            ]
+        );
     }
 
     private function loadMigrations(): void
