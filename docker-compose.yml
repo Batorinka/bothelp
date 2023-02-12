@@ -1,0 +1,92 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: docker/services/rabbitmq/Dockerfile
+    image: ${DOCKER_PROJECT_NAME}_rabbitmq
+    container_name: ${DOCKER_PROJECT_NAME}_rabbitmq
+    networks:
+      - net
+    ports:
+      - "${DOCKER_RABBITMQ_PORT_MANAGER}:15672"
+      - "${DOCKER_RABBITMQ_PORT}:5672"
+    volumes:
+        - ./docker/services/rabbitmq/data/:/lib/rabbitmq/
+        - ./docker/services/rabbitmq/log/:/log/rabbitmq
+
+  mariadb:
+    build:
+      context: .
+      dockerfile: docker/services/mariadb/Dockerfile
+    image: ${DOCKER_PROJECT_NAME}_mariadb
+    container_name: ${DOCKER_PROJECT_NAME}_mariadb
+    networks:
+      - net
+    ports:
+      - '${DOCKER_MARIADB_PORT:-3306}:3306'
+    environment:
+      - MARIADB_DATABASE=${DOCKER_MARIADB_DATABASE}
+      - MARIADB_ROOT_PASSWORD=${DOCKER_MARIADB_ROOT_PASSWORD}
+      - MARIADB_USER=${DOCKER_MARIADB_USER}
+      - MARIADB_PASSWORD=${DOCKER_MARIADB_PASSWORD}
+    depends_on:
+      - rabbitmq
+
+  php:
+    build:
+      context: .
+      dockerfile: ./docker/services/php/${DOCKER_PHP_VERSION}/Dockerfile
+    image: ${DOCKER_PROJECT_NAME}_php
+    container_name: ${DOCKER_PROJECT_NAME}_php
+    working_dir: ${DOCKER_PROJECT_PATCH}
+    networks:
+      - net
+    ports:
+    - '9000:9000'
+    volumes:
+      - ${DOCKER_PROJECT_ROOT}:${DOCKER_PROJECT_PATCH}
+      - ./docker/services/php/${DOCKER_PHP_VERSION}/conf.d/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/services/php/${DOCKER_PHP_VERSION}/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./docker/services/php/${DOCKER_PHP_VERSION}/conf.d/supervisord.ini:/etc/supervisor.d/supervisord.ini
+#      - ./docker/services/php/${DOCKER_PHP_VERSION}/conf.d/worker.ini:/etc/supervisor.d/worker.ini
+      - ./docker/scripts/php.sh:/scripts/php.sh
+    environment:
+      - PROJECT_PATCH=${DOCKER_PROJECT_PATCH}
+      - MARIADB_HOST=${DOCKER_PROJECT_NAME}_mariadb
+    command: /scripts/php.sh
+    depends_on:
+      - rabbitmq
+      - mariadb
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/services/nginx/Dockerfile
+    image: ${DOCKER_PROJECT_NAME}_nginx
+    container_name: ${DOCKER_PROJECT_NAME}_nginx
+    working_dir: ${DOCKER_PROJECT_PATCH}
+    networks:
+      - net
+    ports:
+      - '${DOCKER_NGINX_PORT:-80}:80'
+    volumes:
+      - ${DOCKER_PROJECT_ROOT}:${DOCKER_PROJECT_PATCH}
+      - ./docker/services/nginx/conf.d/${DOCKER_NGINX_CONFIG}:/etc/nginx/conf.d/docker.conf.template
+      - ./docker/scripts/nginx.sh:/scripts/nginx.sh
+    environment:
+      - PROJECT_PATCH=${DOCKER_PROJECT_PATCH}
+      - SERVER_NAME=${DOCKER_PROJECT_DOMAIN}
+      - ROOT=${DOCKER_NGINX_ROOT}
+      - PHP_HOST=${DOCKER_PROJECT_NAME}_php
+      - VIRTUAL_HOST=${DOCKER_PROJECT_DOMAIN}
+    command: /scripts/nginx.sh
+    depends_on:
+      - rabbitmq
+      - mariadb
+      - php
+
+networks:
+  net:
+    driver: bridge
