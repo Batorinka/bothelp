@@ -24,12 +24,15 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "BotHelp\\WebApi\\Modules\\Message\\": "src/Modules/Message/src",
+            "BotHelp\\WebApi\\Modules\\Message\\Database\\Factories\\": "src/Modules/Message/database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "BotHelp\\WebApi\\Modules\\Message\\Tests\\": "src/Modules/Message/tests"
         }
     },
     "scripts": {

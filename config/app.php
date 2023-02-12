@@ -195,6 +195,11 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        /*
+         * Modules
+         */
+        \BotHelp\WebApi\Modules\Message\Providers\MassageServiceProvider::class,
+
     ],
 
     /*
