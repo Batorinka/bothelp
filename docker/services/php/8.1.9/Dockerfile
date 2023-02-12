@@ -1,7 +1,6 @@
 FROM php:8.1.9-fpm-alpine
 
 ARG XDEBUG_VERSION=3.1.3
-ARG REDIS_VERSION=5.3.7
 
 RUN apk update && apk upgrade && apk add \
     libjpeg-turbo-dev \
@@ -19,10 +18,10 @@ RUN apk update && apk upgrade && apk add \
     mc \
     && rm -rf /var/cache/apk/*
 
+RUN docker-php-ext-install bcmath
+
 RUN pecl install \
-      xdebug-${XDEBUG_VERSION} \
-      redis-${REDIS_VERSION} \
-    && docker-php-ext-enable redis
+      xdebug-${XDEBUG_VERSION}
 
 RUN docker-php-ext-install -j$(nproc) \
     pdo_mysql \

@@ -13,6 +13,7 @@ services:
       - "${DOCKER_RABBITMQ_PORT_MANAGER}:15672"
       - "${DOCKER_RABBITMQ_PORT}:5672"
     volumes:
+        - ./docker/services/rabbitmq/etc/:/etc/rabbitmq/
         - ./docker/services/rabbitmq/data/:/lib/rabbitmq/
         - ./docker/services/rabbitmq/log/:/log/rabbitmq
 
